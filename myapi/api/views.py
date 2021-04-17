@@ -1,32 +1,17 @@
 from .models import Image
-from .serializers import SnippetSerializer, UserSerializer
+from .serializers import ImageSerializer
 from rest_framework import generics
-from django.contrib.auth.models import User
-from rest_framework import permissions
 from .permissions import IsOwner
 
 
-class SnippetList(generics.ListCreateAPIView):
-    queryset = Snippet.objects.all()
-    serializer_class = SnippetSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+class ImageList(generics.ListAPIView):
+    serializer_class = ImageSerializer
+    permission_classes = [IsOwner]
 
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-
-class SnippetDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Snippet.objects.all()
-    serializer_class = SnippetSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly,
-                          IsOwnerOrReadOnly]
+    def get_queryset(self):
+        queryset = Image.objects.filter(owner=self.request.user.id)
+        return queryset
 
 
-class UserList(generics.ListAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-
-class UserDetail(generics.RetrieveAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+class ImageDetail(generics.RetrieveUpdateDestroyAPIView):
+    pass
