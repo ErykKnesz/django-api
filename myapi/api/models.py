@@ -18,7 +18,7 @@ class User(AbstractUser):
     user_type = models.CharField(
         max_length=1,
         choices=TYPE_CHOICES,
-        #default=BASE,
+        default=BASE,
     )
 
     def save(self, *args, **kwargs):
@@ -63,17 +63,6 @@ class Image(models.Model):
             img.thumbnail(output_size)
             img.save(self.image.path)
 
-    def set_thumbnails(self, queryset, user):
-        img = queryset.open_image()
-        small_size = (200, img.width)
-        small_thumbnail = img.thumbnail(small_size)
-        big_size = (400, img.width)
-        big_thumbnail = img.thumbnail(big_size)
-        if user.is_premium():
-            return small_thumbnail, big_thumbnail
-        elif user.is_enterprise():
-            pass
-        return small_thumbnail
 
 
 
