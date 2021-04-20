@@ -50,7 +50,7 @@ class ImageDetail(generics.RetrieveAPIView):
             link_t_400 = reverse('thumbnail400',
                                  args=[instance.id],
                                  request=self.request)
-            response['Thumbnail200'] = link_t_400
+            response['Thumbnail400'] = link_t_400
             return JsonResponse(response)
 
         return JsonResponse(response)
