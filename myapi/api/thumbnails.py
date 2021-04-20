@@ -1,6 +1,3 @@
-from django.conf import settings
-import os
-
 def create_thumbnail(instance, size):
     img = instance.open_image()
     path = instance.image.path
