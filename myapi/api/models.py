@@ -1,9 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-import PIL
 from django.core.validators import (FileExtensionValidator,
                                     validate_image_file_extension)
+from imagekit.models import ImageSpecField
+from imagekit.processors import ResizeToFill
+import PIL
 from .validators import image_format_validator
+from .thumbnails import create_thumbnail
+from django.conf import settings
 
 
 class User(AbstractUser):
@@ -37,16 +41,26 @@ class Image(models.Model):
     image = models.ImageField(
         upload_to='pics',
         blank=False,
-        validators=[FileExtensionValidator(['JPG', 'JPEG',  'PNG']),
+        validators=[FileExtensionValidator(settings.ALLOWED_EXTENSIONS),
                     validate_image_file_extension,
                     ]
         )
-    owner = models.ForeignKey(User,
-                              related_name='images',
-                              on_delete=models.CASCADE)
+    user = models.ForeignKey(User,
+                             related_name='images',
+                             on_delete=models.CASCADE)
+    thumbnail_200 = models.FilePathField(
+        path=f'{settings.MEDIA_ROOT}/pics',
+        blank=True,
+        null=True
+    )
+    thumbnail_400 = models.FilePathField(
+        path=f'{settings.MEDIA_ROOT}/pics',
+        blank=True,
+        null=True
+    )
 
     def __str__(self):
-        return f"Image called '{self.name}' uploaded by {self.owner.username}"
+        return f"Image called '{self.name}' uploaded by {self.user.username}"
 
     def open_image(self):
         img = PIL.Image.open(self.image.path)
@@ -54,14 +68,22 @@ class Image(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-
         img = self.open_image()
         image_format_validator(img)
 
-        if img.height > 500 or img.width > 500:
-            output_size = (500, 500)
+        if img.height > 800 or img.width > 800:
+            output_size = (800, 800)
             img.thumbnail(output_size)
-            img.save(self.image.path)
+
+        img.save(self.image.path)
+
+        if self.thumbnail_200 is None or self.thumbnail_400 is None:
+            self.thumbnail_200 = create_thumbnail(self, 200)
+            if self.user.is_premium() or self.user.is_enterprise():
+                self.thumbnail_400 = create_thumbnail(self, 200)
+            self.save()
+        return
+
 
 
 

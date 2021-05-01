@@ -17,13 +17,3 @@ def create_thumbnail(instance, size):
     img.thumbnail(small_size)
     img.save(path)
     return name
-
-
-def create_thumbnail_200(instance):
-    thumbnail_name = create_thumbnail(instance, 200)
-    return thumbnail_name
-
-
-def create_thumbnail_400(instance):
-    thumbnail_name = create_thumbnail(instance, 400)
-    return thumbnail_name
