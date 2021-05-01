@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'imagekit',
     'api',
 ]
 
@@ -147,3 +148,5 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.MultiPartParser',
     ],
 }
+
+ALLOWED_EXTENSIONS = ['JPG', 'JPEG', 'PNG']
