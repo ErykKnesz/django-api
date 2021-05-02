@@ -1,12 +1,10 @@
 from django.db import models
+from django.core.files import File
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (FileExtensionValidator,
                                     validate_image_file_extension)
-from imagekit.models import ImageSpecField
-from imagekit.processors import ResizeToFill
 import PIL
-from .validators import image_format_validator
-from .thumbnails import create_thumbnail
+import os
 from django.conf import settings
 
 
@@ -48,43 +46,49 @@ class Image(models.Model):
     user = models.ForeignKey(User,
                              related_name='images',
                              on_delete=models.CASCADE)
-    thumbnail_200 = models.FilePathField(
-        path=f'{settings.MEDIA_ROOT}/pics',
+    thumbnail_200 = models.ImageField(
+        upload_to='pics',
         blank=True,
-        null=True
+        null=True,
     )
-    thumbnail_400 = models.FilePathField(
-        path=f'{settings.MEDIA_ROOT}/pics',
+    thumbnail_400 = models.ImageField(
+        upload_to='pics',
         blank=True,
-        null=True
+        null=True,
     )
 
     def __str__(self):
         return f"Image called '{self.name}' uploaded by {self.user.username}"
 
-    def open_image(self):
-        img = PIL.Image.open(self.image.path)
-        return img
+    def _create_thumbnail_name(self, height):
+        name = self.image.name
+        name = os.path.basename(name)
+        name_suffix = f'_thumbnail{height}'
+        if name.lower().endswith('.jpg') or name.lower().endswith('.png'):
+            ext = name[-4:]
+            name = name[:-4]
+        if name.lower().endswith('.jpeg'):
+            ext = name[-5:]
+            name = name[:-5]
+        name = name + name_suffix + ext
+        return name
+
+    def create_thumbnail(self, image_thmb_field, height):
+        with open(self.image.path, 'rb') as f:
+            image_thmb_field.save(
+                f'{self._create_thumbnail_name(height)}',
+                File(f))
+            img = PIL.Image.open(image_thmb_field.path)
+            output_size = (height, img.width)
+            img.thumbnail(output_size)
+            img.save(image_thmb_field.path)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        img = self.open_image()
-        image_format_validator(img)
-
-        if img.height > 800 or img.width > 800:
-            output_size = (800, 800)
-            img.thumbnail(output_size)
-
-        img.save(self.image.path)
-
-        if self.thumbnail_200 is None or self.thumbnail_400 is None:
-            self.thumbnail_200 = create_thumbnail(self, 200)
+        thmb_200 = self.__dict__['thumbnail_200']
+        thmb_400 = self.__dict__['thumbnail_400']
+        if not thmb_200:
+            self.create_thumbnail(self.thumbnail_200, 200)
+        if not thmb_400:
             if self.user.is_premium() or self.user.is_enterprise():
-                self.thumbnail_400 = create_thumbnail(self, 200)
-            self.save()
-        return
-
-
-
-
-
+                self.create_thumbnail(self.thumbnail_400, 400)

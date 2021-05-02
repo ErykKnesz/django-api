@@ -11,7 +11,7 @@ class ImageList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedAndOwner]
 
     def get_queryset(self):
-        queryset = Image.objects.filter(owner=self.request.user.id)
+        queryset = Image.objects.filter(user=self.request.user.id)
         return queryset
 
     def create(self, request, *args, **kwargs):
@@ -25,7 +25,7 @@ class ImageList(generics.ListCreateAPIView):
         return response
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        serializer.save(user=self.request.user)
 
 
 class ImageDetail(generics.RetrieveAPIView):
