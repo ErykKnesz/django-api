@@ -2,8 +2,7 @@ from django.db import models
 from django.core.files import File
 from django.contrib.auth.models import User
 from django.core.validators import (FileExtensionValidator,
-                                    validate_image_file_extension,
-                                    MaxValueValidator, MinValueValidator)
+                                    validate_image_file_extension)
 import PIL
 import os
 from django.conf import settings
@@ -70,8 +69,8 @@ class Image(models.Model):
                 self.create_thumbnail(self.big_thumbnail,
                                       self.user.account.big_thmb_size)
 
-    def get_expiring_link(self, duration):
-        pass
+    def get_absolute_url(self):
+        return "/media/%s/" % self.__dict__['image']
 
 
 class Account(models.Model):
@@ -123,14 +122,3 @@ class Account(models.Model):
                 self.has_expiring_links = True
             self.type.upper()
         super().save(*args, **kwargs)
-
-
-class ExpiringLink(models.Model):
-    account = models.OneToOneField(Account,
-                                   on_delete=models.CASCADE,
-                                   primary_key=True)
-    link = models.URLField(max_length=200, null=True, blank=True)
-    link_max_life = models.IntegerField(default=30,
-                                        validators=[MaxValueValidator(30000),
-                                                    MinValueValidator(30)])
-    link_start = models.DateTimeField(auto_now_add=True)

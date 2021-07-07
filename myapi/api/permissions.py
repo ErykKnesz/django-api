@@ -14,3 +14,9 @@ class IsAuthenticated(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return request.user and request.user.is_authenticated
+
+
+class HasExpiringLinks(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return request.user.account.has_expiring_links

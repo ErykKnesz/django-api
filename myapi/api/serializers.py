@@ -19,3 +19,16 @@ class BaseAccountImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = ['small_thumbnail']
+
+
+class LinkSerializer(serializers.ModelSerializer):
+
+    image_url = serializers.SerializerMethodField('get_image_url')
+
+    class Meta:
+        model = Image
+        fields = ('image_url',)
+
+    def get_image_url(self, obj):
+        request = self.context.get("request")
+        return request.build_absolute_uri(obj.image.url)

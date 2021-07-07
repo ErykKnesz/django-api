@@ -1,10 +1,14 @@
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.decorators import (api_view,
+                                       permission_classes)
 from .models import Image
 from .serializers import (CreateImageSerializer, ImageSerializer,
-                          BaseAccountImageSerializer,)
-from .permissions import IsAuthenticatedAndOwner, IsAuthenticated
+                          BaseAccountImageSerializer, LinkSerializer)
+from .permissions import IsAuthenticatedAndOwner, HasExpiringLinks
+from request_token.models import RequestToken
+from django.utils import timezone
 
 
 class CreateImage(generics.CreateAPIView):
@@ -63,4 +67,21 @@ class ImageDetail(generics.RetrieveAPIView):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+
+@api_view(http_method_names=['GET'])
+@permission_classes((IsAuthenticatedAndOwner, HasExpiringLinks))
+def expiring_link(request, pk, life):
+    img = Image.objects.get(pk=pk)
+    token = RequestToken.objects.create_token(
+        scope="foo",
+        login_mode=RequestToken.LOGIN_MODE_NONE)
+    token.expiration_time = timezone.now() + timezone.timedelta(seconds=life)
+    token.save()
+    serializer = LinkSerializer(img, context={"request": request})
+    data = {'expiring link': serializer.data['image_url'] + token.jwt(),
+            'claims': token.claims}
+    return Response(data, status=200)
+
+
 

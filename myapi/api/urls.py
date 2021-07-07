@@ -8,4 +8,6 @@ urlpatterns = [
     path('images/<int:pk>/',
          views.ImageDetail.as_view(),
          name='image-details'),
+    path('images/<int:pk>/link/<int:life>', views.expiring_link, name='image_link'),
 ]
+
