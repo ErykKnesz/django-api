@@ -3,9 +3,10 @@ from django.core.files import File
 from django.contrib.auth.models import User
 from django.core.validators import (FileExtensionValidator,
                                     validate_image_file_extension)
-import PIL
-import os
 from django.conf import settings
+
+import PIL
+from pathlib import Path
 
 
 class Image(models.Model):
@@ -36,15 +37,10 @@ class Image(models.Model):
 
     def _create_thumbnail_name(self, height):
         name = self.image.name
-        name = os.path.basename(name)
+        f_name = Path(name).stem
+        ext = Path(name).suffix
         name_suffix = f'_thumbnail{height}'
-        if name.lower().endswith('.jpg') or name.lower().endswith('.png'):
-            ext = name[-4:]
-            name = name[:-4]
-        if name.lower().endswith('.jpeg'):
-            ext = name[-5:]
-            name = name[:-5]
-        name = name + name_suffix + ext
+        name = f_name + name_suffix + ext
         return name
 
     def create_thumbnail(self, image_thmb_field, height):
