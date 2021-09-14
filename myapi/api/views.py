@@ -13,7 +13,8 @@ from django.urls import reverse
 from .models import Image
 from .serializers import (CreateImageSerializer, ImageSerializer,
                           BaseAccountImageSerializer, LinkSerializer)
-from .permissions import IsAuthenticatedAndOwner, HasExpiringLinks
+from .permissions import (IsAuthenticated, IsAuthenticatedAndOwner,
+                          HasExpiringLinks)
 
 
 class CreateImage(generics.CreateAPIView):
@@ -75,20 +76,26 @@ class ImageDetail(generics.RetrieveAPIView):
 
 
 @api_view(http_method_names=['GET'])
-@permission_classes((IsAuthenticatedAndOwner, HasExpiringLinks))
+@permission_classes((IsAuthenticated, HasExpiringLinks))
 def create_expiring_link(request, pk, life):
+    obj = Image.objects.get(pk=pk)
+    if obj.user != request.user:
+        msg = {'detail': "No authorisation to use this object"}
+        return Response(msg, status=403)
+    if life < 30 or life > 30000:
+        msg = {'detail': "Token life needs to be within the range of"
+                         "30 to 30 000 seconds."
+               }
+        return Response(msg, status=400)
     token = RequestToken.objects.create_token(
-        scope="link",
+        scope='link',
         login_mode=RequestToken.LOGIN_MODE_NONE,
         data={'img_id': pk}
     )
-    if life < 30 or life > 30000:
-        msg = "Token life needs to be within the range of 30 to 30 000 seconds."
-        return Response(msg, status=400)
     token.expiration_time = timezone.now() + timezone.timedelta(seconds=life)
     token.save()
     url = reverse('display_image', args=[pk])
-    serializer = LinkSerializer(url, context={"request": request})
+    serializer = LinkSerializer(url, context={'request': request})
     image_url = serializer.data['image_url']
     data = {'expiring link': image_url + '?rt=' + token.jwt(),
             'claims': token.claims}
@@ -97,7 +104,7 @@ def create_expiring_link(request, pk, life):
 
 @api_view(http_method_names=['GET'])
 @permission_classes((AllowAny,))
-@use_request_token(scope="link", required=False)
+@use_request_token(scope='link', required=False)
 def handle_expiring_link(request, pk):
     print(request.token)
     img_id = (
