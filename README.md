@@ -11,6 +11,6 @@ This project aims at providing RESTful API for users to upload images (only "JPE
 6. Go to the localhost:8000/images endpoint in your browser (to use Django Rest Frameworks' browsable API functionality) or send an equivalent GET request.
 7. To post your first file use the same endpoint, but first you'll need an account. 
 8. Create Django superuser to be able to create new users (`python manage.py createsuperuser`).
-9. Go to localhost:800/admin to create a new user or use your admin account to post files.
+9. Go to localhost:8000/admin to create a new user or use your admin account to post files.
 10. Log into your account. Now you can post an image (see point 5).
 11. The /images view now shows that image as well as any other images posted by that user.
