@@ -1,8 +1,7 @@
 # django-api
 
 ## About the project
-This project aims at providing RESTful API for users to upload images (only "JPEG"/"JPG" and "PNG" formats). Not all features have been implemented as of yet, to be continued.
-This project is written in Python 3. As this is a development server, the images are stored in the default Django File Storage system (i.e. MEDIA_ROOT constant) that's not password-protected. As this has to be changed in production anyway, the authentication for this media storage url was not implemented (as opposed to API endpoints).
+This project aims at providing RESTful API for users to upload images (only "JPEG"/"JPG" and "PNG" formats). 
 
 ## How to run the project
 1. Create a virtual environment (e.g. `python -m venv venv`) and run it, then clone the repository/download the files.
