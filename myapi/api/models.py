@@ -5,7 +5,7 @@ from django.core.validators import (FileExtensionValidator,
                                     validate_image_file_extension)
 from django.conf import settings
 
-import PIL
+import PIL.Image
 from pathlib import Path
 
 
