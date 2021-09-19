@@ -1,11 +1,11 @@
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from rest_framework.decorators import (api_view,
                                        permission_classes)
 from request_token.models import RequestToken
 from request_token.decorators import use_request_token
-from rest_framework.permissions import AllowAny
 from django.utils import timezone
 from django.http import FileResponse
 from django.urls import reverse
@@ -94,7 +94,7 @@ def create_expiring_link(request, pk, life):
     )
     token.expiration_time = timezone.now() + timezone.timedelta(seconds=life)
     token.save()
-    url = reverse('display_image', args=[pk])
+    url = reverse('display_image')
     serializer = LinkSerializer(url, context={'request': request})
     image_url = serializer.data['image_url']
     data = {'expiring link': image_url + '?rt=' + token.jwt(),
@@ -104,13 +104,18 @@ def create_expiring_link(request, pk, life):
 
 @api_view(http_method_names=['GET'])
 @permission_classes((AllowAny,))
-@use_request_token(scope='link', required=False)
-def handle_expiring_link(request, pk):
-    print(request.token)
-    img_id = (
-        request.token.data['img_id']
-        if hasattr(request, 'token')
-        else None
-    )
-    img = Image.objects.get(pk=img_id)
-    return FileResponse(open(img.image.path, 'rb'))
+@use_request_token(scope='link')
+def handle_expiring_link(request):
+    try:
+        img_id = (
+            request.token.data['img_id'] if hasattr(request, 'token') else None
+        )
+        if img_id is not None:
+            img = Image.objects.get(pk=img_id)
+            return FileResponse(open(img.image.path, 'rb'))
+        else:
+            msg = {'detail': "No token found in request"}
+            return Response(msg, status=403)
+    except AttributeError:
+        msg = {'detail': "Token expired"}
+        return Response(msg, status=403)

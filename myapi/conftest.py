@@ -3,6 +3,7 @@ import uuid
 import pytest
 from django.contrib.auth.models import User
 from django.core.files import File
+from request_token.models import RequestToken
 
 from api.models import Account, Image
 
@@ -44,3 +45,14 @@ def create_image(create_user, create_account):
             img.save()
             return img
     return make_image
+
+
+@pytest.fixture
+def create_token(create_user, create_account):
+    def make_token():
+        token = RequestToken.objects.create_token(
+            scope='link',
+            data={'img_id': 1}
+        )
+        return token
+    return make_token

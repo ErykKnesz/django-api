@@ -11,7 +11,7 @@ urlpatterns = [
     path('images/<int:pk>/link/<int:life>',
          views.create_expiring_link,
          name='image_link'),
-    path('images/<int:pk>/show/',
+    path('images/show_image',
          views.handle_expiring_link,
          name='display_image'),
 ]

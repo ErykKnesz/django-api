@@ -109,7 +109,7 @@ class Account(models.Model):
         return self.type == 'C'
 
     def save(self, *args, **kwargs):
-        if not self.is_custom:
+        if not self.is_custom():
             self.small_thmb_size = 200
             if self.is_premium() or self.is_enterprise():
                 self.big_thmb_size = 400
