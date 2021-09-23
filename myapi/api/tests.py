@@ -42,7 +42,7 @@ def test_view_image_list_shows_images_for_base(client, create_image,
 @pytest.mark.django_db
 def test_view_image_list_shows_images_for_premium(client, create_image,
                                                   test_password):
-    img = create_image(type='Premium')
+    img = create_image(type='P')
     user = User.objects.latest('id')
     client.login(username=user.username, password=test_password)
     url = reverse('image_list')
@@ -55,7 +55,7 @@ def test_view_image_list_shows_images_for_premium(client, create_image,
 @pytest.mark.django_db
 def test_view_image_list_shows_images_for_enterprise(client, create_image,
                                                      test_password):
-    img = create_image(type='Enterprise')
+    img = create_image(type='E')
     user = User.objects.latest('id')
     client.login(username=user.username, password=test_password)
     url = reverse('image_list')
@@ -71,7 +71,7 @@ def test_view_image_detail_shows_images_for_base(client, create_image,
     img = create_image()
     user = User.objects.latest('id')
     client.login(username=user.username, password=test_password)
-    url = reverse('image-details', args=[user.id])
+    url = reverse('image-details', args=[img.id])
     response = client.get(url)
 
     img_name = img.image.name
@@ -83,10 +83,10 @@ def test_view_image_detail_shows_images_for_base(client, create_image,
 @pytest.mark.django_db
 def test_view_image_detail_shows_images_for_premium(client, create_image,
                                                     test_password):
-    img = create_image(type='Premium')
+    img = create_image(type='P')
     user = User.objects.latest('id')
     client.login(username=user.username, password=test_password)
-    url = reverse('image-details', args=[user.id])
+    url = reverse('image-details', args=[img.id])
     response = client.get(url)
     assert img.image.name in response.data['image']
     assert img.small_thumbnail.name in response.data['small_thumbnail']
@@ -96,10 +96,10 @@ def test_view_image_detail_shows_images_for_premium(client, create_image,
 @pytest.mark.django_db
 def test_view_image_detail_shows_images_for_enterprise(client, create_image,
                                                        test_password):
-    img = create_image(type='Enterprise')
+    img = create_image(type='E')
     user = User.objects.latest('id')
     client.login(username=user.username, password=test_password)
-    url = reverse('image-details', args=[user.id])
+    url = reverse('image-details', args=[img.id])
     response = client.get(url)
     assert img.image.name in response.data['image']
     assert img.small_thumbnail.name in response.data['small_thumbnail']
@@ -174,10 +174,10 @@ def test_view_create_image_creates_thmb_for_non_base(client, create_user,
 @pytest.mark.django_db
 def test_view_create_expiring_link_30000_sec(client, create_image,
                                              test_password):
-    create_image(type='E')
+    img = create_image(type='E')
     user = User.objects.latest('id')
     client.login(username=user.username, password=test_password)
-    url = reverse('image_link', args=[1, 30000])
+    url = reverse('image_link', args=[img.id, 30000])
     response = client.get(url)
     assert response.status_code == 200
     assert 'expiring link' in response.data
@@ -190,10 +190,10 @@ def test_view_create_expiring_link_30000_sec(client, create_image,
 @pytest.mark.django_db
 def test_view_create_expiring_link_30001_sec(client, create_image,
                                              test_password):
-    create_image(type='E')
+    img = create_image(type='E')
     user = User.objects.latest('id')
     client.login(username=user.username, password=test_password)
-    url = reverse('image_link', args=[1, 30001])
+    url = reverse('image_link', args=[img.id, 30001])
     response = client.get(url)
     assert response.status_code == 400
 
@@ -201,10 +201,10 @@ def test_view_create_expiring_link_30001_sec(client, create_image,
 @pytest.mark.django_db
 def test_view_create_expiring_link_29_sec(client, create_image,
                                           test_password):
-    create_image(type='E')
+    img = create_image(type='E')
     user = User.objects.latest('id')
     client.login(username=user.username, password=test_password)
-    url = reverse('image_link', args=[1, 29])
+    url = reverse('image_link', args=[img.id, 29])
     response = client.get(url)
     assert response.status_code == 400
 
@@ -212,11 +212,11 @@ def test_view_create_expiring_link_29_sec(client, create_image,
 @pytest.mark.django_db
 def test_access_create_expiring_link_no_img_owner(client, create_image,
                                                   test_password):
-    create_image(type='E')
-    create_image()
-    user = User.objects.get(pk=2)
-    client.login(username=user.username, password=test_password)
-    url = reverse('image_link', args=[1, 30])
+    img = create_image(type='E')
+    img_2 = create_image()
+    user_img_2 = User.objects.get(pk=img_2.user.id)
+    client.login(username=user_img_2.username, password=test_password)
+    url = reverse('image_link', args=[img.id, 30])
     response = client.get(url)
     assert response.status_code == 403
 
@@ -224,10 +224,10 @@ def test_access_create_expiring_link_no_img_owner(client, create_image,
 @pytest.mark.django_db
 def test_access_create_expiring_link_no_enterprise(client, create_image,
                                                    test_password):
-    create_image(type='P')
-    user = User.objects.get(pk=1)
+    img = create_image(type='P')
+    user = User.objects.get(pk=img.user.id)
     client.login(username=user.username, password=test_password)
-    url = reverse('image_link', args=[1, 30])
+    url = reverse('image_link', args=[img.id, 30])
     response = client.get(url)
     assert response.status_code == 403
 

@@ -48,11 +48,12 @@ def create_image(create_user, create_account):
 
 
 @pytest.fixture
-def create_token(create_user, create_account):
+def create_token(create_image):
     def make_token():
+        img = create_image()
         token = RequestToken.objects.create_token(
             scope='link',
-            data={'img_id': 1}
+            data={'img_id': img.id}
         )
         return token
     return make_token

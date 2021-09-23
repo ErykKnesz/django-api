@@ -20,3 +20,9 @@ class HasExpiringLinks(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return request.user.account.has_expiring_links
+
+
+class HasToken(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        return hasattr(request, 'token')
